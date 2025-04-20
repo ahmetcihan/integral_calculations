@@ -9,7 +9,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     setWindowTitle("MFA501 Assessment 2B - Ahmet Cihan AKINCA");
     connect(ui->pushButton_calculate_y, SIGNAL(clicked(bool)), this, SLOT(calculateY()));
-
+    connect(ui->pushButton_draw_graph, SIGNAL(clicked(bool)), this, SLOT(drawGraph()));
+    customPlot = new QCustomPlot(this->ui->centralwidget);
+    customPlot->setGeometry(50, 400, 300, 200); // (x, y, width, height)
 }
 int MainWindow::parse(const QString& expr, QString& errorMessage) { //returns 0 for success, -1 on error and sets errorMessage
     terms.clear();
@@ -159,9 +161,8 @@ int MainWindow::parseTerm(const QString& term, QString& errorMessage) {
 double MainWindow::evaluate(double x) const {
     double result = 0.0;
 
-    // C tarzı döngü: vector'ün elemanlarına indeksle erişim
     for (int i = 0; i < terms.size(); i++) {
-        double term_value = terms[i].coefficient; // terms[i] ile erişim
+        double term_value = terms[i].coefficient;
 
         // x^exponent hesaplaması için iç döngü
         for (int j = 0; j < terms[i].exponent; j++) {
@@ -189,7 +190,53 @@ void MainWindow::calculateY() {
 
     ui->label_y_result->setText(QString("y = %1").arg(y));
 }
+void MainWindow::drawGraph() {
+    QString errorMessage;
+    int result = parse(ui->lineEdit_function->text(), errorMessage);
+    if (result != 0) {
+        ui->label_y_result->setText(QString("Error: %1").arg(errorMessage));
+        return;
+    }
 
+    double x1 = ui->doubleSpinBox_x_1->value();
+    double x2 = ui->doubleSpinBox_x_2->value();
+    double delta_x = ui->doubleSpinBox_delta_x->value();
+
+    if (delta_x <= 0) {
+        ui->label_y_result->setText("Error: Δx must be positive");
+        return;
+    }
+    if (x1 >= x2) {
+        ui->label_y_result->setText("Error: x1 must be less than x2");
+        return;
+    }
+
+    QVector<double> x, y;
+
+    for (double val = x1; val <= x2; val += delta_x) {
+        x.append(val);
+        y.append(evaluate(val));
+    }
+
+    if ((x.isEmpty()) || (x.last() < x2)) {
+        x.append(x2);
+        y.append(evaluate(x2));
+    }
+
+    customPlot->clearGraphs();
+    customPlot->addGraph();
+    customPlot->graph(0)->setData(x, y);
+    customPlot->graph(0)->setPen(QPen(Qt::blue));
+
+    customPlot->xAxis->setLabel("x");
+    customPlot->yAxis->setLabel("y");
+    customPlot->graph(0)->rescaleAxes();
+    customPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables);
+
+    customPlot->replot();
+
+    ui->label_y_result->setText("Graph drawn successfully");
+}
 MainWindow::~MainWindow()
 {
     delete ui;

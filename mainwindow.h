@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QDebug>
+#include "qcustomplot.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -28,9 +29,11 @@ private:
          int exponent;
      };
 
-     std::vector<Term> terms;
+    std::vector<Term> terms;
+    QCustomPlot* customPlot;
 
 public slots:
      void calculateY(void);
+     void drawGraph();
 };
 #endif // MAINWINDOW_H
