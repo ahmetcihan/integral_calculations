@@ -159,9 +159,8 @@ int MainWindow::parseTerm(const QString& term, QString& errorMessage) {
 double MainWindow::evaluate(double x) const {
     double result = 0.0;
 
-    // C tarzı döngü: vector'ün elemanlarına indeksle erişim
     for (int i = 0; i < terms.size(); i++) {
-        double term_value = terms[i].coefficient; // terms[i] ile erişim
+        double term_value = terms[i].coefficient;
 
         // x^exponent hesaplaması için iç döngü
         for (int j = 0; j < terms[i].exponent; j++) {
