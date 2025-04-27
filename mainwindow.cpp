@@ -7,13 +7,13 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    setWindowTitle("MFA501 Assessment 2B - Ahmet Cihan AKINCA");
+    setWindowTitle("MFA501 Assessment 2B - Ahmet Cihan AKINCA - Integral Calculation");
     connect(ui->pushButton_calculate_y, SIGNAL(clicked(bool)), this, SLOT(calculateY()));
     connect(ui->pushButton_draw_graph, SIGNAL(clicked(bool)), this, SLOT(drawGraph()));
     connect(ui->pushButton_calculate_integral, SIGNAL(clicked(bool)), this, SLOT(calculateIntegral()));
 
     customPlot = new QCustomPlot(this->ui->centralwidget);
-    customPlot->setGeometry(50, 400, 300, 200); // (x, y, width, height)
+    customPlot->setGeometry(500, 70, 370, 280); // (x, y, width, height)
 }
 int MainWindow::parse(const QString& expr, QString& errorMessage) { //returns 0 for success, -1 on error and sets errorMessage
     terms.clear();
