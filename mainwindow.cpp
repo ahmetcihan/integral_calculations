@@ -10,6 +10,8 @@ MainWindow::MainWindow(QWidget *parent)
     setWindowTitle("MFA501 Assessment 2B - Ahmet Cihan AKINCA");
     connect(ui->pushButton_calculate_y, SIGNAL(clicked(bool)), this, SLOT(calculateY()));
     connect(ui->pushButton_draw_graph, SIGNAL(clicked(bool)), this, SLOT(drawGraph()));
+    connect(ui->pushButton_calculate_integral, SIGNAL(clicked(bool)), this, SLOT(calculateIntegral()));
+
     customPlot = new QCustomPlot(this->ui->centralwidget);
     customPlot->setGeometry(50, 400, 300, 200); // (x, y, width, height)
 }
@@ -236,6 +238,115 @@ void MainWindow::drawGraph() {
     customPlot->replot();
 
     ui->label_y_result->setText("Graph drawn successfully");
+}
+void MainWindow::calculateIntegral() {
+    QString errorMessage;
+    int result = parse(ui->lineEdit_function->text(), errorMessage);
+    if (result != 0) {
+        ui->label_integral_result->setText(QString("Error: %1").arg(errorMessage));
+        return;
+    }
+
+    double a = ui->doubleSpinBox_x_1->value();
+    double b = ui->doubleSpinBox_x_2->value();
+    int n = ui->doubleSpinBox_n->value();
+
+    if (a >= b) {
+        ui->label_integral_result->setText("Error: a must be less than b");
+        return;
+    }
+    if (n <= 0) {
+        ui->label_integral_result->setText("Error: n must be positive");
+        return;
+    }
+
+    // Yamuk kuralı ile integral hesaplama
+    double h = (b - a) / n;
+    double sum = 0.0;
+
+    // İlk ve son terimler: f(a) ve f(b)
+    sum += evaluate(a) + evaluate(b);
+
+    // Ara terimler: 2 * f(x_i)
+    for (int i = 1; i < n; i++) {
+        double x = a + i * h;
+        sum += 2 * evaluate(x);
+    }
+
+    double integral = (h / 2.0) * sum;
+
+    // Sonucu göster
+    ui->label_integral_result->setText(QString("Integral = %1").arg(integral));
+
+    // Grafiği çiz ve alanı gölgelendir
+    double x1 = ui->doubleSpinBox_x_1->value();
+    double x2 = ui->doubleSpinBox_x_2->value();
+    double delta_x = ui->doubleSpinBox_delta_x->value();
+
+    if (delta_x <= 0) {
+        ui->label_integral_result->setText("Error: Δx must be positive");
+        return;
+    }
+    if (x1 >= x2) {
+        ui->label_integral_result->setText("Error: x1 must be less than x2");
+        return;
+    }
+
+    // Grafik için veriler
+    QVector<double> x, y;
+    for (double val = x1; val <= x2; val += delta_x) {
+        x.append(val);
+        y.append(evaluate(val));
+    }
+    if (x.isEmpty() || x.last() < x2) {
+        x.append(x2);
+        y.append(evaluate(x2));
+    }
+
+    // Grafiği temizle ve yeni bir grafik ekle
+    customPlot->clearGraphs();
+    customPlot->addGraph();
+    customPlot->graph(0)->setData(x, y);
+    customPlot->graph(0)->setPen(QPen(Qt::blue));
+
+    // Gölgelendirme için x-eksenine kadar bir taban çizgisi oluştur
+    customPlot->addGraph();
+    QVector<double> x_base, y_base;
+    double h_shade = (b - a) / n;
+    for (double val = a; val <= b; val += h_shade) {
+        x_base.append(val);
+        y_base.append(0.0); // y = 0 (x-ekseni)
+    }
+    if (x_base.isEmpty() || x_base.last() < b) {
+        x_base.append(b);
+        y_base.append(0.0);
+    }
+    customPlot->graph(1)->setData(x_base, y_base);
+    customPlot->graph(1)->setPen(Qt::NoPen); // Taban çizgisini görünmez yap
+
+    // Gölgelendirme için a ile b arasındaki bölgeyi çiz
+    customPlot->addGraph();
+    QVector<double> x_shade, y_shade;
+    for (double val = a; val <= b; val += h_shade) {
+        x_shade.append(val);
+        y_shade.append(evaluate(val));
+    }
+    if (x_shade.isEmpty() || x_shade.last() < b) {
+        x_shade.append(b);
+        y_shade.append(evaluate(b));
+    }
+    customPlot->graph(2)->setData(x_shade, y_shade);
+    customPlot->graph(2)->setPen(Qt::NoPen); // Çizgiyi görünmez yap, sadece gölgelendirme kalsın
+    customPlot->graph(2)->setBrush(QBrush(QColor(255, 0, 0, 50))); // Yarı saydam kırmızı gölgelendirme
+    customPlot->graph(2)->setChannelFillGraph(customPlot->graph(1)); // x-eksenine kadar gölgelendirme
+
+    // Eksenleri ayarla
+    customPlot->xAxis->setLabel("x");
+    customPlot->yAxis->setLabel("y");
+    customPlot->graph(0)->rescaleAxes();
+    customPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables);
+
+    customPlot->replot();
 }
 MainWindow::~MainWindow()
 {

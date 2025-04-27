@@ -35,5 +35,6 @@ private:
 public slots:
      void calculateY(void);
      void drawGraph();
+     void calculateIntegral();
 };
 #endif // MAINWINDOW_H
